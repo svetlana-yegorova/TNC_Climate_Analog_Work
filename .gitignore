@@ -30,3 +30,7 @@ vignettes/*.pdf
 # output and data files: 
 data/
 outputs/
+
+# exploratory code files that don't necessarily need to be backed up: 
+code/CA_function_NN_future
+code/chunking_learning
