@@ -39,13 +39,13 @@ n5.1<-n5[!grepl("0.5", n5$model), ]
 ```{r histograms, echo=FALSE, message=FALSE, warning=FALSE}
 def_f_nf<-ggplot(data0, aes(x=def_h, color=as.factor(forest)))+
   geom_histogram()+
-  labs(title = "Raw Deficit Distribution ", color="Forest/Non-forest")+
+  labs(title = "Raw Deficit Distribution ", color="Non-forest/Forest")+
   xlab("Deficit")+
   theme_bw()
 
 aet_f_nf<-ggplot(data0, aes(x=aet_h, color=as.factor(forest)))+
   geom_histogram()+
-  labs(title = "Raw AET Distribution ", color="Forest/Non-forest")+
+  labs(title = "Raw AET Distribution ", color="Non-forest/Forest")+
   xlab("AET")+
   theme_bw()
 
@@ -60,13 +60,13 @@ aet_f_nf<-ggplot(data0, aes(x=aet_h, color=as.factor(forest)))+
 # for comparison: 
 def_f_nfsq<-ggplot(data0, aes(x=sqrt(def_h), color=as.factor(forest)))+
   geom_histogram()+
-  labs(title = "SQRT Deficit Distribution ", color="Forest/Non-forest")+
+  labs(title = "SQRT Deficit Distribution ", color="Non-forest/Forest")+
   xlab("Deficit")+
   theme_bw()
 
 aet_f_nfsq<-ggplot(data0, aes(x=sqrt(aet_h), color=as.factor(forest)))+
   geom_histogram()+
-  labs(title = "SQRT AET Distribution ", color="Forest/Non-forest")+
+  labs(title = "SQRT AET Distribution ", color="Non-forest/Forest")+
   xlab("AET")+
   theme_bw()
 
@@ -94,7 +94,7 @@ separate<-ggplot(data0, aes(x=def_h, y=aet_h))+
 together<-ggplot(data0, aes(x=def_h, y=aet_h, color= forest)) +
   geom_point(shape=1, alpha=0.5) +
  # geom_point(data=subset(data0, forest==1), colour="red", shape=1)+
-    labs(title = "Forst & non-forest pixels in the climate space (together)")+
+    labs(title = "Non-forest & forest pixels in the climate space (together)")+
   xlab("Deficit")+
   ylab("AET")+
   theme_bw()
@@ -197,49 +197,49 @@ raw_t<-raw%>%
 # What is the effect of AET  and deficit window size on forest/non-forest classificaiton accuracy (raw data): 
 
 ```{r,  echo=FALSE, message=FALSE, warning=FALSE}
-
-
-by_def<-ggplot(subset(raw_t, def<100), aes(x=def, y=Accuracy, color=as.factor(aet)))+
-  geom_point()+
-  scale_x_continuous(breaks=c(5, 10, 25, 50, 100, 250, 500))+
-  labs(title="Accuracy by Raw Def Bin Widths", color="AET bin size")+
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+
-  theme_bw()+
-  xlab("Raw deficit bin size")
-
-
-
-by_aet<-ggplot(subset(raw_t, aet<100), aes(x=aet, y=Accuracy, color=as.factor(def)))+
-  geom_point()+
-  scale_x_continuous(breaks=c(5, 10, 25, 50, 100, 250, 500))+
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+
-  theme_bw()+
-  labs(title="Accuracy Organized by Raw AET Bin Widths", color="Deficit bin size")+
-  xlab("Raw AET bin size")
-
-### compare 
-
-aet<-big_table1 %>% 
-  filter(n==7)%>%
-  arrange(by= "aet") %>% 
-  ggplot( aes(x=aet, y=accuracy, color=def))+
-  geom_point() +
-  theme_bw()+
-  labs(title = "accuracy by sqrt(aet) ", color="def")
-  
-
-
-def<-big_table1 %>% 
-  filter(n==7)%>%
-  arrange(by= "def") %>% 
-  ggplot( aes(x=def, y=accuracy, color=aet))+
-  geom_point() +
-  theme_bw()+
-  labs(title = "accuracy by sqrt(aet) ", color="aet")
-  
-
-
-(by_def/by_aet)
+# 
+# 
+# by_def<-ggplot(subset(raw_t, def<100), aes(x=def, y=Accuracy, color=as.factor(aet)))+
+#   geom_point()+
+#   scale_x_continuous(breaks=c(5, 10, 25, 50, 100, 250, 500))+
+#   labs(title="Accuracy by Raw Def Bin Widths", color="AET bin size")+
+#   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+
+#   theme_bw()+
+#   xlab("Raw deficit bin size")
+# 
+# 
+# 
+# by_aet<-ggplot(subset(raw_t, aet<100), aes(x=aet, y=Accuracy, color=as.factor(def)))+
+#   geom_point()+
+#   scale_x_continuous(breaks=c(5, 10, 25, 50, 100, 250, 500))+
+#   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+
+#   theme_bw()+
+#   labs(title="Accuracy Organized by Raw AET Bin Widths", color="Deficit bin size")+
+#   xlab("Raw AET bin size")
+# 
+# ### compare 
+# 
+# aet<-big_table1 %>% 
+#   filter(n==7)%>%
+#   arrange(by= "aet") %>% 
+#   ggplot( aes(x=aet, y=accuracy, color=def))+
+#   geom_point() +
+#   theme_bw()+
+#   labs(title = "accuracy by sqrt(aet) ", color="def")
+#   
+# 
+# 
+# def<-big_table1 %>% 
+#   filter(n==7)%>%
+#   arrange(by= "def") %>% 
+#   ggplot( aes(x=def, y=accuracy, color=aet))+
+#   geom_point() +
+#   theme_bw()+
+#   labs(title = "accuracy by sqrt(aet) ", color="aet")
+#   
+# 
+# 
+# (by_def/by_aet)
 ```
 ```{r,  message=FALSE, warning=FALSE}
 # def
@@ -247,6 +247,36 @@ def<-big_table1 %>%
 # aet
 
 ```
+
+```{r, echo=FALSE, warning=FALSE, message = FALSE}
+
+test11<-read_csv("../outputs/accuracy_raw_reruns_5_50mm_7NN_50km.csv")
+test12<-read_csv("../outputs/accuracy_raw_20_40mm_7NN_50km.csv")
+test13<-read_csv("../outputs/accuracy_raw_reruns_75_100mm7NN.csv")
+test14<-read_csv("../outputs/accuracy_raw_reruns_150mm_7NN_50km.csv")
+
+
+new_raw<-rbind(test11, test12, test13, test14)
+
+
+head(new_raw)
+tail(new_raw)
+
+new_raw<-new_raw%>%
+  separate(model, into=c("model", "def_aet"), sep=11)%>%
+  separate(def_aet, into=c("def", "aet"), sep="_")
+head(new_raw)
+
+
+ggplot(data=new_raw, aes(x=as.numeric(def), y=accuracy))+
+  geom_point()+
+  theme_bw()+
+  ylim(0.7, 0.9)+
+  labs(title = "Classificaition Accuracy, Raw Data, 7 Analogs")+
+  xlab("Deficit & AET bin size (mm)")
+
+```
+
 
 <!-- # Where do the misclassified pixels lie in climate space: -->
 
