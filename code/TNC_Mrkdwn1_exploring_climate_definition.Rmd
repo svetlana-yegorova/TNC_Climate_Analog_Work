@@ -36,36 +36,73 @@ n5.1<-n5[!grepl("0.5", n5$model), ]
 
 ## Raw AET and deficit histograms: 
 
+ * Data plotted are a random 10,000 pixel subsample of the 35X10^6 Oregon pixels (full dataset takes too long to plot)
+ * These are "overlapping" histograms: histogram of non-forest plotted over histogram of forest pixels
+ * Histogram bars are transparent to facilitate interpretation. 
 ```{r histograms, echo=FALSE, message=FALSE, warning=FALSE}
-def_f_nf<-ggplot(data0, aes(x=def_h, color=as.factor(forest)))+
-  geom_histogram()+
-  labs(title = "Raw Deficit Distribution ", color="Non-forest/Forest")+
+
+
+def_f_nf<-ggplot(data0, aes(x=def_h))+
+  geom_histogram(data=subset(data0, forest==1), aes(fill="green"), alpha=0.2)+
+  geom_histogram(data=subset(data0, forest==0), aes(fill="red"), alpha=0.2)+
+  labs(title = "Raw Deficit Distribution (10 000 pixel subsample) ", color="Non-forest/Forest")+
+  scale_fill_manual(name="Forest/non-forest", labels = c("red"="Non-forest", "green"="Forest"),   values=c("red"="red", "green"="green"))+
   xlab("Deficit")+
   theme_bw()
+# 
 
-aet_f_nf<-ggplot(data0, aes(x=aet_h, color=as.factor(forest)))+
-  geom_histogram()+
+
+aet_f_nf<-ggplot(data0, aes(x=aet_h))+
+  geom_histogram(data=subset(data0, forest==1), aes(fill="green"), alpha=0.2)+
+  geom_histogram(data=subset(data0, forest==0), aes(fill="red"), alpha=0.2)+
   labs(title = "Raw AET Distribution ", color="Non-forest/Forest")+
+  scale_fill_manual(name="Forest/non-forest", labels = c("red"="Non-forest", "green"="Forest"),   values=c("red"="red", "green"="green"))+
+
   xlab("AET")+
   theme_bw()
 
+# fig = ggplot(test, aes(x = value, fill = condition)) +
+#     geom_histogram(position = "identity", alpha = .8) + 
+#     scale_fill_manual(values=c("grey20", "grey60")) + theme_bw()
 
 # (def/aet)
 (def_f_nf/aet_f_nf)
 ```
 
 ## SQRT-transformed AET and deficit histograms: 
+
+
 ```{r sqare root histograms,  echo=FALSE, message=FALSE, warning=FALSE}
 
 # for comparison: 
-def_f_nfsq<-ggplot(data0, aes(x=sqrt(def_h), color=as.factor(forest)))+
-  geom_histogram()+
+# def_f_nfsq<-ggplot(data0, aes(x=sqrt(def_h), color=as.factor(forest)))+
+#   geom_histogram(fill="transparent")+
+#   labs(title = "SQRT Deficit Distribution ", color="Non-forest/Forest")+
+#   xlab("Deficit")+
+#   theme_bw()
+
+
+def_f_nfsq<-ggplot(data0, aes(x=sqrt(def_h)))+
+  # geom_histogram()+
+  geom_histogram(data=subset(data0, forest== 1), aes( fill="green"), alpha=0.2)+
+  geom_histogram(data=subset(data0, forest== 0), aes( fill="red"), alpha=0.2)+
+
+  # geom_histogram(subset(data0, forest == 0), aes(x=sqrt(aet_h)), alpha=0.2, fill="red")+
+  # # geom_histogram(fill="transparent")+
   labs(title = "SQRT Deficit Distribution ", color="Non-forest/Forest")+
+  # scale_color_manual(name = "Forest/non-forest", labels = c("Non-forest", "Forest"), values=c("red", "darkgreen")) +
+    scale_fill_manual(name="Forest/non-forest", labels = c("red"="Non-forest", "green"="Forest"), values=c("red"="red", "green"="green"))+
   xlab("Deficit")+
   theme_bw()
 
-aet_f_nfsq<-ggplot(data0, aes(x=sqrt(aet_h), color=as.factor(forest)))+
-  geom_histogram()+
+aet_f_nfsq<-ggplot(data0, aes(x=sqrt(aet_h)))+
+  # geom_histogram()+
+  geom_histogram(data=subset(data0, forest== 1), aes( fill="green"), alpha=0.2)+
+  geom_histogram(data=subset(data0, forest== 0), aes( fill="red"), alpha=0.2)+
+  scale_fill_manual(name="Forest/non-forest", labels = c("red"="Non-forest", "green"="Forest"), values=c("red"="red", "green"="green"))+
+
+  # geom_histogram(subset(data0, forest == 0), aes(x=sqrt(aet_h)), alpha=0.2, fill="red")+
+  # # geom_histogram(fill="transparent")+
   labs(title = "SQRT AET Distribution ", color="Non-forest/Forest")+
   xlab("AET")+
   theme_bw()
@@ -109,94 +146,199 @@ together
  
  
  - ~ 400 mm deficit value seems like the the forest cutoff (in agreement with Stephenson 1990)
- - Other climate thresholds?
+ - Forest and non-forest pixels share much of the climate space defined by AET and Deficit
  
-# What is the effect of AET  and deficit window size on forest/non-forest classificaiton accuracy (sqrt-transformed data):
- - These are results that I presented during our last meeting, but organized by AET and deficit values. 
-
- - Multiple points within the analog number and deficit category represent different values of AET tested. 
-
- - Multiple points within the analog number and AET category represent different values of deficit tested. 
  
- - Is there a consistent effect of Deficit or AET bin size? 
  
- - Smaller def bins are associated with higher accuracy (down to 0.75, but not lower)? but the effect is ephemeral, specific to N=7
-```{r influence of def values vs aet values: data, include = FALSE}
-head(n7)
-n7$n<-7
-n7_extra$n<-7
-n9$n<-9
-n15$n<-15
-n100$n<-100
-n5.1$n<-5
-
-big_table<-rbind(n5.1,  n7[, -c(3:4)], n7_extra[, -c(3:4)], n9, n15[, -c(3:4)], n100) ### removing CI columns
-
-str(big_table)
-
-# separate out the bin values from "forest"
-big_table1<-big_table %>% 
-  separate(model, sep=11, into=c("forest", "new_model")) %>% 
-  separate(new_model, sep="_", into=c("def", "aet"), remove=FALSE)
-
-
-# convert model names to a factor: 
-big_table1$new_model<-as.factor(big_table1$new_model)
-
-t_label<-as.character(big_table1$new_model)
-big_table1<-big_table1 %>% 
-  mutate(def=as.numeric(def))
-```
-
-
-```{r influence of def values vs aet values, echo=FALSE,  message=FALSE, warning=FALSE}
-# sort results by deficit values: 
-def<-big_table1 %>% 
-  arrange(by= "def") %>% 
-  ggplot( aes(x=def, y=accuracy, color=as.factor(n)))+
-  geom_point() +
-  theme_bw()+
-  labs(title = "Accuracy by deficit", color="# of analogs")+
-  xlab("Deficit bin size (sqrt(mm))")
+# Where do the misclassified pixels lie in the climate space:
+  * Using ~ 1 unit climate bin size with square-root transformed data
+  * 7 analogs used for classification
   
-  # scale_x_discrete(name="climate bins combinations (def_aet)", labels=t_label)+
-  # theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
-# sort results by aet values: 
-aet<-big_table1 %>% 
-  # filter(n=7)%>%
-  arrange(by= "aet") %>% 
-  ggplot( aes(x=aet, y=accuracy, color=as.factor(n)))+
-  geom_point() +
-  theme_bw()+
-  labs(title = "Accuracy by AET", color="# of analogs")+
-  xlab("AET bin size (sqrt(mm))")
+  
 
-(def/aet)
+```{r mislassification vis, echo = FALSE, message = FALSE, warning = FALSE}
+
+# need to load the unprocessed classification data:
+# do it just for the 7 analogs
+mis<-readRDS("../outputs/accuracy_sqrt_circa_1mm_bins_7nn.rds")
+
+# pick out misclassificaitons for one column only:
+mis1<-mis%>%
+  filter(forest.pred0.75_1!=forest)
+
+# scatterplot of mistakes with the background of general forest/non-forest distribution
+
+pt_plot<-ggplot(mis, aes(x=(def_h)^2, y=(aet_h)^2, color= as.factor(forest))) +
+   geom_point(shape=1, alpha=0.5) +
+  geom_point(data=mis1, aes(x=(def_h)^2, y=(aet_h)^2, color="misclassification"), shape =10)+
+  theme_classic()+
+  labs(title="Misclassified pixels in the AET & deficit space", subtitle ="1000 test pixels", color="Non-forest/Forest")+
+  ylab("AET")+xlab("Deficit")
+
+pt_plot
+```
+
+
+
+## Histogram of misclassificaitons by Defiict: 
+
+```{r misclassification histograms, message=FALSE, warning=FALSE, echo=FALSE}
+
+def_mistakes<-ggplot(data=data0, aes(x=def_h, color=as.factor(forest)))+
+  geom_histogram(fill="transparent")+
+  theme(legend.position = none)+
+  geom_histogram(data=mis1, aes(x=(def_h)^2))+
+  labs(title="Forest/non-forest histogram (hollow) and misclassified (solid) pixels by deficit", subtitle="Hollow bars - actual values from 10,000 pixel subsample. Solid bars = misclassifications", x="Deficit", color="misclassifications")+
+  scale_color_manual(labels = c("Non-forest", "Forest"), values=c("red", "darkgreen")) +
+
+  # ylim(0, 15)+
+  theme_bw()
+
+def_mistakes
+
+# Zoomed-in histogram of mistakes by deficit: 
+def_mistakes_z<-ggplot(data=mis1, aes(x=(def_h)^2))+
+  geom_histogram(data=subset(mis1,forest.pred0.75_1==1), aes(fill="green"), alpha=0.2)+
+  geom_histogram(data=subset(mis1,forest.pred0.75_1==0), aes(fill="red"), alpha=0.2)+
+  labs(title="Misclassifications by deficit values (zoomed-in Y axix)", color="Misclassified as:")+
+  scale_fill_manual(name="misclassifications", labels = c("red"="Non-forest", "green"="Forest"), values=c("red"="red", "green"="green"))+
+  xlab("Deficit")+
+  theme_bw()
+
+
+def_mistakes_z
+
+```
+
+
+* Misclassifications are not limited to the vicinity of the 400 mm of deficit
+* They happen at all the overlapping values of deficit
+
+## Misclassifications by AET values:
+
+```{r Misclassificaitons by AET just in case, message = FALSE, echo=FALSE, warning=FALSE}
+
+# Misclassification by AET, just in case: 
+aet_mistakes<-ggplot(data=data0, aes(x=aet_h, color=as.factor(forest)))+
+  geom_histogram(fill="transparent")+
+  theme(legend.position = none)+
+  geom_histogram(data=mis1, aes(x=(def_h)^2))+
+  labs(title="Forest/non-forest histogram and misclassified (solid) pixels by AET", subtitle="Hollow bars - actual values from 10,000 pixel subsample. Solid bars = misclassifications", x="AET", color="misclassifications")+
+  scale_color_manual(labels = c("Non-forest", "Forest"), values=c("red", "darkgreen")) +
+
+  # ylim(0, 15)+
+  theme_bw()
+
+aet_mistakes
+
+# zoomed in view: 
+aet_mistakes_z<-ggplot(data=mis1, aes(x=(aet_h)^2))+
+ geom_histogram(data=subset(mis1,forest.pred0.75_1==1), aes(fill="green"), alpha=0.2)+
+  geom_histogram(data=subset(mis1,forest.pred0.75_1==0), aes(fill="red"), alpha=0.2)+
+  labs(title="Misclassifications by AET values (zoomed-in Y axix)", color="Misclassified as:")+
+  scale_fill_manual(name="misclassifications", labels = c("red"="Non-forest", "green"="Forest"), values=c("red"="red", "green"="green"))+
+  xlab("AET")+
+  theme_bw()
+
+aet_mistakes_z
+
 
 
 ```
-```{r forests & non-forests in the aet and def climate space,  message=FALSE, warning=FALSE}
 
 
-```
-```{r raw value tests that I already have, include=FALSE}
+<!-- # What is the effect of AET  and deficit window size on forest/non-forest classificaiton accuracy (sqrt-transformed data): -->
+<!--  - These are results that I presented during our last meeting, but organized by AET and deficit values.  -->
 
-## compile the wide bin tests that I already have: 
-raw0<-read_csv("../outputs/wide_bins_tests1.csv")
+<!--  - Multiple points within the analog number and deficit category represent different values of AET tested.  -->
 
-raw1<-read_csv("../outputs/medium_wide_bins_accuracy.csv")
-raw<-rbind(raw1[, c(2:5)], raw0)
+<!--  - Multiple points within the analog number and AET category represent different values of deficit tested.  -->
 
-## separate out aet and deficit values: 
+<!--  - Is there a consistent effect of Deficit or AET bin size?  -->
 
-raw_t<-raw%>% 
-  separate(col="model", sep=11, into=c("model", "def_aet"), convert=TRUE) %>%
-  separate(col="def_aet", sep="_", into=c("def", "aet"), convert=TRUE)
+<!--  - Smaller def bins are associated with higher accuracy (down to 0.75, but not lower)? but the effect is ephemeral, specific to N=7 -->
+```{r influence of def values vs aet values: data, include = FALSE}
+# head(n7)
+# n7$n<-7
+# n7_extra$n<-7
+# n9$n<-9
+# n15$n<-15
+# n100$n<-100
+# n5.1$n<-5
+# 
+# big_table<-rbind(n5.1,  n7[, -c(3:4)], n7_extra[, -c(3:4)], n9, n15[, -c(3:4)], n100) ### removing CI columns
+# 
+# str(big_table)
+# 
+# # separate out the bin values from "forest"
+# big_table1<-big_table %>% 
+#   separate(model, sep=11, into=c("forest", "new_model")) %>% 
+#   separate(new_model, sep="_", into=c("def", "aet"), remove=FALSE)
+# 
+# 
+# # convert model names to a factor: 
+# big_table1$new_model<-as.factor(big_table1$new_model)
+# 
+# t_label<-as.character(big_table1$new_model)
+# big_table1<-big_table1 %>% 
+#   mutate(def=as.numeric(def))
+# ```
+# 
+# 
+# ```{r influence of def values vs aet values, echo=FALSE,  message=FALSE, warning=FALSE}
+# # sort results by deficit values: 
+# def<-big_table1 %>% 
+#   arrange(by= "def") %>% 
+#   ggplot( aes(x=def, y=accuracy, color=as.factor(n)))+
+#   geom_point() +
+#   theme_bw()+
+#   labs(title = "Accuracy by deficit", color="# of analogs")+
+#   xlab("Deficit bin size (sqrt(mm))")
+#   
+#   # scale_x_discrete(name="climate bins combinations (def_aet)", labels=t_label)+
+#   # theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+# # sort results by aet values: 
+# aet<-big_table1 %>% 
+#   # filter(n=7)%>%
+#   arrange(by= "aet") %>% 
+#   ggplot( aes(x=aet, y=accuracy, color=as.factor(n)))+
+#   geom_point() +
+#   theme_bw()+
+#   labs(title = "Accuracy by AET", color="# of analogs")+
+#   xlab("AET bin size (sqrt(mm))")
+# 
+# (def/aet)
+# 
+# 
+# ```
+# ```{r forests & non-forests in the aet and def climate space,  message=FALSE, warning=FALSE}
+# 
+# 
+# ```
+# ```{r raw value tests that I already have, include=FALSE}
+# 
+# ## compile the wide bin tests that I already have: 
+# raw0<-read_csv("../outputs/wide_bins_tests1.csv")
+# 
+# raw1<-read_csv("../outputs/medium_wide_bins_accuracy.csv")
+# raw<-rbind(raw1[, c(2:5)], raw0)
+# 
+# ## separate out aet and deficit values: 
+# 
+# raw_t<-raw%>% 
+#   separate(col="model", sep=11, into=c("model", "def_aet"), convert=TRUE) %>%
+#   separate(col="def_aet", sep="_", into=c("def", "aet"), convert=TRUE)
 
 ```
 # What is the effect of AET  and deficit window size on forest/non-forest classificaiton accuracy (raw data): 
 
-```{r,  echo=FALSE, message=FALSE, warning=FALSE}
+* Re-ran tests for raw and square-root transformed data
+* AET and deficit bin sizes are identical 
+* Considered 7 analogs
+* 50 km buffer 
+
+
+```{r,  echo=FALSE, message=FALSE, warning=FALSE, echo=FALSE}
 # 
 # 
 # by_def<-ggplot(subset(raw_t, def<100), aes(x=def, y=Accuracy, color=as.factor(aet)))+
@@ -241,14 +383,15 @@ raw_t<-raw%>%
 # 
 # (by_def/by_aet)
 ```
-```{r,  message=FALSE, warning=FALSE}
+```{r,  message=FALSE, warning=FALSE, echo=FALSE}
 # def
  
 # aet
 
 ```
 
-```{r, echo=FALSE, warning=FALSE, message = FALSE}
+## Re-runs of the accuracy tests. Raw data: 
+```{r echo=FALSE, message = FALSE}
 
 test11<-read_csv("../outputs/accuracy_raw_reruns_5_50mm_7NN_50km.csv")
 test12<-read_csv("../outputs/accuracy_raw_20_40mm_7NN_50km.csv")
@@ -259,88 +402,129 @@ test14<-read_csv("../outputs/accuracy_raw_reruns_150mm_7NN_50km.csv")
 new_raw<-rbind(test11, test12, test13, test14)
 
 
-head(new_raw)
-tail(new_raw)
 
 new_raw<-new_raw%>%
   separate(model, into=c("model", "def_aet"), sep=11)%>%
   separate(def_aet, into=c("def", "aet"), sep="_")
-head(new_raw)
 
+breaks<-as.numeric(unique(new_raw$aet))
 
 ggplot(data=new_raw, aes(x=as.numeric(def), y=accuracy))+
   geom_point()+
   theme_bw()+
   ylim(0.7, 0.9)+
   labs(title = "Classificaition Accuracy, Raw Data, 7 Analogs")+
+  scale_x_continuous(breaks=breaks)+
   xlab("Deficit & AET bin size (mm)")
 
 ```
 
+## Re-runs of the accuracy tests, squre-root transformed data: 
+```{r echo=FALSE, message = FALSE, warning = FALSE}
 
-<!-- # Where do the misclassified pixels lie in climate space: -->
+sqrt_reruns<-read_csv("../outputs/accuracy_sqrt_reruns_05_2_7nn_50km.csv")
 
-<!-- ```{r mislassification vis, echo = FALSE, message = FALSE, warning = FALSE} -->
-
-<!-- # need to load the unprocessed classification data: -->
-<!-- # do it just for the 7 analogs -->
-<!-- mis<-readRDS("../outputs/accuracy_sqrt_circa_1mm_bins_7nn.rds") -->
-
-<!-- # pick out misclassificaitons for one column only: -->
-<!-- mis1<-mis%>% -->
-<!--   filter(forest.pred0.75_1!=forest) -->
-
-<!-- # visualize, where these misclassifications are happening: -->
-<!-- # ggplot(data0, aes(x=def_h, y=aet_h, color= forest)) + -->
-<!-- #   geom_point(shape=1, alpha=0.5) + -->
-<!-- #   geom_point(data=mis1, aes(x=(def_h)^2, y=(aet_h)^2, color=forest), -->
-<!-- #              shape = 3) -->
+# clean the data: 
+new_sqrt<-sqrt_reruns%>%
+  separate(model, into=c("model", "def_aet"), sep=11)%>%
+  separate(def_aet, into=c("def", "aet"), sep="_")
 
 
-<!-- # ggplot(data0, aes(x=def_h, y=aet_h, color= forest)) + -->
-<!-- #   geom_point() + -->
-<!-- #   geom_point(data=mis1, aes(x=(def_h)^2, y=(aet_h)^2, fill=as.factor(forest))) -->
+# plot the data: 
+breaks_sq<-as.numeric(unique(new_sqrt$def))
 
-<!-- pt_plot<-ggplot(mis, aes(x=(def_h)^2, y=(aet_h)^2, color= as.factor(forest))) + -->
-<!--    geom_point(shape=1, alpha=0.5) + -->
-<!--   geom_point(data=mis1, aes(x=(def_h)^2, y=(aet_h)^2, color="mistake"), shape =10) -->
-
-<!-- # zoom<-ggplot(data=data0, aes(x=def_h, color=forest))+ -->
-<!-- #   geom_histogram()+ -->
-<!-- ggplot()+ -->
-<!--   geom_histogram(data=mis1, aes(x=(def_h)^2, color=as.factor(forest)))+ -->
-<!--   ylim(0, 10)+ -->
-<!--     labs(color="incorrectly classified as ")+ -->
-<!--   theme_bw() -->
-
-<!-- def_mistakes<-ggplot(data=data0, aes(x=def_h, color=forest))+ -->
-<!--   geom_histogram()+ -->
-<!--   geom_histogram(data=mis1, aes(x=(def_h)^2, color='mistake'), fill='yellow')+ -->
-<!--   theme_bw() -->
-
-<!-- # geom_point(data=mis1, aes(x=(def_h)^2, y=(aet_h)^2, color=as.factor(forest)), shape =10) -->
-
-<!-- (zoom+def_mistakes) -->
-
-<!-- aet_mistakes<-ggplot(data=data0, aes(x=aet_h, color=forest))+ -->
-<!--   geom_histogram()+ -->
-<!--   geom_histogram(data=mis1, aes(x=(aet_h)^2, color='mistake'), fill='yellow')+ -->
-<!--   theme_bw() -->
-
-<!-- aet_m_zoom<-ggplot(data=data0, aes(x=aet_h, color=forest))+ -->
-<!--   geom_histogram()+ -->
-<!--   geom_histogram(data=mis1, aes(x=(aet_h)^2, color='mistake'), fill='yellow')+ -->
-<!--   ylim(0, 10)+ -->
-<!--   theme_bw() -->
+ggplot(data=new_sqrt, aes(x=as.numeric(def), y=accuracy))+
+  geom_point()+
+  theme_bw()+
+  ylim(0.7, 0.9)+
+  labs(title = "Classificaition Accuracy, SQRT Data, 7 Analogs")+
+  scale_x_continuous(breaks=breaks_sq)+
+  xlab("Deficit & AET bin size (sqrt(mm))")
 
 
-<!-- (aet_mistakes+ aet_m_zoom) -->
-<!-- ``` -->
+```
 
 
 
-## Summary: 
-- Using square-root transformed data results in higher overall classification accuracy compared to raw data.
 
-- Perhaps the result of the "dynamic" climate bin size: smaller bins for lower values of AET and Deficit, 
-larger bins for high values of AET and Deficit. 
+# What is the effect of considering different number of analogs for projection classification? 
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+
+# read in the data: 
+nn5r<-read_csv("../outputs/accuracy_sqrt_reruns_05_2_5NN_50km.csv")
+nn5r$n<-5
+nn7r<-read_csv("../outputs/accuracy_sqrt_reruns_05_2_7nn_50km.csv")
+nn7r$n<-7
+
+nn9r<-read_csv("../outputs/accuracy_sqrt_reruns_05_2_9NN_50km.csv")
+nn9r$n<-9
+nn11r<-read_csv("../outputs/accuracy_sqrt_reruns_05_2_11NN_50km.csv")
+nn11r$n<-11
+
+nn15r<-read_csv("../outputs/accuracy_sqrt_reruns_05_2_15NN_50km.csv")
+nn15r$n<-15
+
+
+acc_nn<-rbind(nn5r, nn7r, nn9r, nn11r, nn15r)
+acc_nn$n<-as.factor(acc_nn$n)
+
+
+# clean: 
+acc_nn1<-acc_nn%>%
+  separate(model, into=c("model", "def_aet"), sep=11)%>%
+  separate(def_aet, into=c("def", "aet"), sep="_")
+
+
+
+
+ggplot(acc_nn1, aes(x=def, y=accuracy, color=n))+
+  geom_point()+
+  theme_bw()+
+  labs(title= "Accuracy by number of analogs considered")+
+  xlab("Deficit and AET Bin Size (sqrt(mm))")+
+  ylim(0.7, 0.9)
+
+### 
+```
+
+# Where are the 1000 focal plots located? 
+
+```{r maps}
+library(tidyverse)
+library(raster)
+aet<-raster("../data/aet_trouble/AET/AET.img")
+data11<-readRDS("../outputs/accuracy2_2_11NN50km.rds")
+
+# map misclassifications: 
+mis<-readRDS("../outputs/accuracy_sqrt_circa_1mm_bins_7nn.rds")
+
+# pick out misclassificaitons for one column only:
+mis1<-mis%>%
+  filter(forest.pred0.75_1!=forest)
+
+
+plot(aet, main = "Location of one subset of 1000 focal pixels (black) and misclassified pixels (red)")
+points(mis[, c(1:2)])
+points(mis1[, c(1:2)], col='red', pch=12)
+
+```
+
+# Summary: 
+## Effect of climate bin size:
+- Raw and sqare-root transformed data appear to have equal accuracy.
+    - Previous results, where raw data had lower accuracy were likely a result of a different search criteria - I looked at a number of them early on and did not label my results carefully. 
+
+- Bin sizes (raw and square-root transformed) do not have a strong effect on accuracy. 
+
+- Thoughts on the lack of bin size sensitivity:
+  - Perhaps picking the "closest" analogs overrides the effect of widening the climate bin
+  - Low sensitivity to bin sizes is in line with the broad overlap of forested and non-forested plots in the AET and Deficit space. Narrower bin is not necessarily meaningful. 
+
+
+- The effect of # of analogs considered on accuracy is also weak, and is likely a spurious result of the focal subset considered (my algorithm picks a new set of 1000 focal plots for each test)
+
+- Distance still has a strong effect on accuracy. 
+
