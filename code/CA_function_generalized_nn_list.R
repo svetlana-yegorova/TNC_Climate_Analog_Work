@@ -3,19 +3,30 @@
 # version of the climate analog function that calculates accuracy for different 
 # numbers of analogs considered. 
 
+# libraries
+
+library(tidyverse)
+library(FNN)
+library(caret)
+library(data.table)
 #### junk space to define vars when testing
-n=list(15, 11, 5)
-i=1
+
+# load fnf function: 
+source("./code/fnf_subfunction.R")
+
+
 d=50000
 
-bin.aet=1
-bin.cmd=1
 
-hist(data$def_h)
+bin.aet=5
+bin.cmd=5
+
+nn_list<-c(5, 25, 50)
+
 #################
 
 
-the.cad.function_g1 <-function(i, d, n) { # for a focal cell i, buffer distance d
+the.cad.function_g1 <-function(i, d, nn_list) { # for a focal cell i, buffer distance d
   # and n, a list of nearest neighbours to consider.
   
   from.xy <- data[i, c('x', 'y')] # extract focal coordinates
@@ -34,33 +45,43 @@ the.cad.function_g1 <-function(i, d, n) { # for a focal cell i, buffer distance 
   subset <- subset(subset_c, sqrt((from.xy$x-x)^2+(from.xy$y -y)^2)>= d)
   
   if (nrow(subset) > 0) {
-    # loop through different number of analogs: 
-    output<-list()
-    for(p in 1:length(n)){
+      # set K to the maximum NN size
+      if (nrow(subset) >= max(nn_list)) { k=max(nn_list) } else { k=nrow(subset) } # set the NN number to the largest sample value
       
-      pl=n[[p]]
-      if (nrow(subset) >= pl) { k=pl } else { k=nrow(subset) }
-      
-      # calculate distances between the focal and the subset points: 
-      
-      out.dist <- get.knnx(subset[,c('x', 'y')], from.xy, k=k) # get 7 (or whatever k is) nearest neighbors in the subset defined above
+      # calculate distance matrix between the focal and the subset points for the largest # of NN considered: 
+      out.dist <- get.knnx(subset[,c('x', 'y')], from.xy, k=k) 
       nn.index <- as.data.frame(out.dist$nn.index)
-      forest.nonforest <- round(mean(subset[out.dist$nn.index,]$forest))	
+      
+      # use the fnf function to iterate through the forest/non-forest calculation for all NN variations
+      
+      # function to iterate: 
+      # fnf <- function(kn){
+      #   indices<-out.dist$nn.index[1:kn]
+      #   # round(mean(subset[out.dist$nn.index[1:kn],]$forest))
+      #   forest.nonforest<-round(mean(subset[indices,]$forest))
+      #   if(forest.nonforest==0) {vars= (1-sum(subset[indices,]$forest)/kn)} else{vars = sum(subset[indices,]$forest)/kn}
+      #   
+      #   
+      #   return(c(forest.nonforest, vars, kn))
+      # }
+      
+      #iterate the fnf function with lapply statement over the nn_list: 
+      
+      out1<-lapply(nn_list, fnf)
       
       # report variance/agreement: 
-      if(forest.nonforest==0) {vars= (1-sum(subset[out.dist$nn.index,]$forest)/pl)} else{vars = sum(subset[out.dist$nn.index,]$forest)/pl}
+      # if(forest.nonforest==0) {vars= (1-sum(subset[out.dist$nn.index,]$forest)/pl)} else{vars = sum(subset[out.dist$nn.index,]$forest)/pl}
       
       #vars<-sum(subset[out.dist$nn.index,]$forest)/n
       
       
       #  nn.index <- as.data.frame(out.dist1$nn.index)
       # forest.nonforest <- round(mean(subset1[out.dist1$nn.index,]$forest))	
-      output[[p]]<-c(i, forest.nonforest, vars, pl)
+      # output[[p]]<-c(i, forest.nonforest, vars, pl)
       
-    }
-    output1<-do.call("c", output)
-    return(output1)
-    
+    # output1<-do.call("rbind", out1)
+    # return(output1)
+    return(out1)
   }
   
   if (nrow(subset) == 0) {
