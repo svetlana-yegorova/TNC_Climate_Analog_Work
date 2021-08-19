@@ -8,6 +8,7 @@ library(caret)
 
 # data
 # data1<-readRDS("./outputs/accuracy_sqrt_circa_1mm_bins_15nn.rds")
+
 # for the 5 n dataset, need to remove the 0.9 data first (left over from previous
 # test). Remove columnts that have 0.9 in their names: 
 # data0<-data1[,-grep("0.9",colnames(data1))]
@@ -22,7 +23,7 @@ accy<-data1%>%
   select(starts_with("forest"))
 
 str(accy)
-data<-cbind(data1[, c(1:3)], accy)
+data<-cbind(data1[, c(1:2, 4)], accy)
 
 # are there n/a's in this new dataframe? what about -99s?
 errors<-data.frame(which((data == -99), arr.ind=TRUE))
@@ -31,9 +32,9 @@ error_rows<-unique(errors$row)
 # remove errow rows from the data, it has no analogs for the narrow values of def: 
 if(nrow(errors)>0) { data<-data[-error_rows, ]} 
   
-nrow(data)
+# nrow(data)
 # load the accuracy function: 
-source("./code/accuracy_sensitivity_FUNs.R")
+# source("./code/accuracy_sensitivity_FUNs.R")
 test<-lapply(X=c(5:ncol(data)), acc_forest_s_s)
 
 # get the kappa values: 
@@ -46,7 +47,7 @@ test_kappa<-data.frame(do.call("rbind", test0))
 # attach kappa values to the accuracy data: 
 test1<-cbind(test1, test_kappa[, 2])
 
-test1
+# test1
 
 # calculate the average agreement score for each model: 
 # get agreement data: 
@@ -57,9 +58,9 @@ agrmt<-data1%>% # remove -99 rows before calculating accuracy
 
 
 ## add agreement data to unsorted accuracy data: 
-str(agrmt)
+# str(agrmt)
 agrmt1<-t(agrmt)
-head(agrmt1)
+# head(agrmt1)
 
 test1<-cbind(test1, agrmt1[, 1])
 head(test1)
@@ -84,5 +85,9 @@ test1[order(test1$mean_analog_agreement, decreasing = TRUE), ]
 ## are there duplicate model names/mistakes?
 test1[order(test1$model, decreasing = TRUE), ]
 
-
+### clean the output: 
+# 
+# test11<-test11%>%
+#   separate(model, into=c("model", "pct_nn"), sep=11)%>%
+#   separate(pct_nn, into=c("pct", "nn"), sep="pct_N")
 
