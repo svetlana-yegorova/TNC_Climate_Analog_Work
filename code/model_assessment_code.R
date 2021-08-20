@@ -1,24 +1,15 @@
 #7/10/21 This file contains accuracy, kappa and agreement assessment scripts 
-# for contemporary forest/non-forest predictions
+# for contemporary forest/non-forest predictions 
+
+# data1 is the file containing a column with  actual forest/non-forest condition 
+# of each pixel as well as the 
 
 # libraries
 library(tidyverse)
 library(caret)
 
 
-# data
-# data1<-readRDS("./outputs/accuracy_sqrt_circa_1mm_bins_15nn.rds")
-
-# for the 5 n dataset, need to remove the 0.9 data first (left over from previous
-# test). Remove columnts that have 0.9 in their names: 
-# data0<-data1[,-grep("0.9",colnames(data1))]
-# ncol(data0)
-# str(data0)
-# 
-# data1<-data0
-# examine the accuracy: 
-# first extract/select the prediction columns: 
-
+# code 
 accy<-data1%>%
   select(starts_with("forest"))
 
@@ -38,7 +29,6 @@ if(nrow(errors)>0) { data<-data[-error_rows, ]}
 test<-lapply(X=c(5:ncol(data)), acc_forest_s_s)
 
 # get the kappa values: 
-
 test0<-lapply(X=c(5:ncol(data)), kappa_forest)
 
 test1<-data.frame(do.call("rbind", test))
@@ -85,7 +75,8 @@ test1[order(test1$mean_analog_agreement, decreasing = TRUE), ]
 ## are there duplicate model names/mistakes?
 test1[order(test1$model, decreasing = TRUE), ]
 
-### clean the output: 
+### clean the output (optional chunk that breaks up the model column into more 
+# useful columns): 
 # 
 # test11<-test11%>%
 #   separate(model, into=c("model", "pct_nn"), sep=11)%>%
