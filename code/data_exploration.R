@@ -2,6 +2,7 @@
 
 # libraries
 library(raster)
+
 library(rgdal)
 
 # historical data
@@ -35,9 +36,18 @@ aet_f<-raster("./data/AET_f/AET/AET.img")
 # the high end of the data
 
 # load the forest/non-forest mask:  
-forest<-raster("./data/R6Forest_90m/r6forest_90m/")
-forest
-plot(forest)
+forest_old<-raster("./data/R6Forest_90m/r6forest_90m/")
+# forest
+# plot(forest)
+
+# load the updated forest/non-forest mask: 
+forest<-raster("./data/R6Mask_NLCD.tif/R6Mask_NLCD.tif")
+
+# visualize: 
+par(mfrow=c(1, 2))
+plot(forest,main="new raster")
+plot(forest_old, main="old raster")
+
 
 # forest and deficit layers have different projections (crs).
 # also different extents 
@@ -56,14 +66,20 @@ crs(def_h)
 rasterOptions(maxmemory=1e+08) # to avoid crashing R, limit how much
 # memory can be used by the package
 
-forest_r<-projectRaster(forest, crs=crs(def_h), res=90) # add "res=90"
+
+
+#use nearest neighbour method to retain just 1 and 2 values: 
+forest_r<-projectRaster(forest, crs=crs(def_h), res=90, method="ngb") # add "res=90"
 # to make sure that the output cell size is 90 meters
+
+# forest_rold<-projectRaster(forest_old, crs=crs(def_h), res=90, method="bilinear")
 
 # check how re-projection worked: 
 forest_r
 def_h
 
 # plot rasters on top of each other: 
+par(mfrow=c(1,1))
 plot(forest_r)
 plot(def_h, alpha=0.4, add=T) # forest_r has a greater extent- it 
 #continues into washington, while def_h is in oregon only
@@ -71,13 +87,8 @@ plot(def_h, alpha=0.4, add=T) # forest_r has a greater extent- it
 
 # clip rasters to the same extent: 
 forest_crop<-crop(forest_r, def_h)
+# forest_old_crop<-crop(forest_rold, def_h)
 
-# plot rasters on top of each other again: 
-plot(forest_crop)
-plot(def_h, alpha=0.4, add=T)
-
-forest_crop
-def_h
 
 extent(forest_crop) <- alignExtent(forest_crop, def_h) 
 extent(def_h)
@@ -113,9 +124,14 @@ writeFormats()
 raster_list<-list(def_crop, aet_crop, deff_crop, aetf_crop, forest_crop)
 names_list<-list("def", "aet", "f_def", "f_aet", "forest")
 
+
+raster_list<-list(forest_crop)
+names_list<-list("forest")
+
+
 for(i in 1:length(raster_list)){
   filename=paste0(names_list[[i]], ".tif")
   writeRaster(raster_list[[i]], paste0("./outputs/", filename) ,
-              format="GTiff" )
+              format="GTiff" , overwrite = TRUE)
 }
 
