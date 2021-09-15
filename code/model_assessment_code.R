@@ -13,7 +13,7 @@ library(caret)
 accy<-data1%>%
   select(starts_with("forest"))
 
-str(accy)
+# str(accy)
 data<-cbind(data1[, c(1:2, 4)], accy)
 
 # are there n/a's in this new dataframe? what about -99s?
@@ -53,7 +53,7 @@ agrmt1<-t(agrmt)
 # head(agrmt1)
 
 test1<-cbind(test1, agrmt1[, 1])
-head(test1)
+# head(test1)
 # 
 # 
 # colnames(test1)<-c("model", "accuracy", "acc_CI_lower", "acc_CI_upper",
@@ -66,14 +66,14 @@ head(test1)
 
 # sort by greatest accuracy values: 
 test11<-test1[ order(test1$accuracy, decreasing = TRUE), ]
-test11
+# test11
 # save the accuracy table 
 # write_csv(test11, "./outputs/accuracy_sqrt_075_125_50km_15analogs.csv")
 
-test1[order(test1$mean_analog_agreement, decreasing = TRUE), ]
+# test1[order(test1$mean_analog_agreement, decreasing = TRUE), ]
 
 ## are there duplicate model names/mistakes?
-test1[order(test1$model, decreasing = TRUE), ]
+# test1[order(test1$model, decreasing = TRUE), ]
 
 ### clean the output (optional chunk that breaks up the model column into more 
 # useful columns): 

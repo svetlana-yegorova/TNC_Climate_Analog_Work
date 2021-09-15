@@ -36,13 +36,13 @@ source("./code/fnf_subfunction.R")
 # # random pixel function (no nearest neighbor filter)
 # source("./code/random_pixel_analog.R")
 
-# # define distance buffer variable: 
+# # define distance buffer variable (in meters): 
 d=25000
 # 
 # # define number of analogs variable: 
 nn_list<-c(5, 10, 20, 30, 50, 75, 100)
 
-# define bin width or bin width combinations: 
+# define bin width or bin width combinations (mm): 
 bin.aet=c(5, 10, 20, 30, 50, 75, 100, 150)
 bin.cmd=c(5, 10, 20, 30, 50, 75, 100, 150)
 
